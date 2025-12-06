@@ -1,16 +1,54 @@
-# com_cart
+# 🛒 Ecom Cart – Flutter E-Commerce App
 
-A new Flutter project.
+A modern and responsive e-commerce demo application built using **Flutter**, featuring product listing, product editing, cart management, smooth UI animations, and a clean minimal design.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## ✨ Features
 
-A few resources to get you started if this is your first Flutter project:
+### 🛍 Product & UI
+- Beautiful animated product grid with hero transitions
+- Product detail page with full specification
+- Responsive layout (mobile / tablet)
+- Modern gradients, shadows, Lottie success animation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 🧾 Cart System
+- Global cart service with add / remove / clear functions
+- Real-time quantity sync across **List, Detail & Cart pages**
+- Cart total calculation and summary
+- Success confirmation screen with animation
+- Auto clear cart upon successful order
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🧠 Architecture & Data
+| Component | Description |
+|-----------|------------|
+| Flutter | UI framework |
+| BLoC | State management for product states |
+| CartService | Global cart logic |
+| Dio | REST API client |
+| Sliver Widgets | CustomScrollView + SliverGrid |
+| Lottie | Animated success screen |
+
+---
+
+## 📂 Folder Structure
+
+```plaintext
+lib/
+ ├── core/
+ │   └── cart_service.dart
+ ├── features/
+ │   └── products/
+ │       ├── data/
+ │       │   ├── models/
+ │       │   └── product_repository.dart
+ │       ├── logic/
+ │       │   ├── product_list/
+ │       │   └── product_detail/
+ │       └── presentation/
+ │           ├── product_list/
+ │           │   └── product_list_page.dart
+ │           ├── product_detail/
+ │           ├── product_edit/
+ │           └── cart/
+ ├── main.dart
