@@ -16,13 +16,10 @@ class ProductRepository {
         queryParameters: {"limit": limit, "skip": skip},
       );
 
-      print("✅ getProducts -> ${res.data['products']?.length} items");
       return ProductListResponse.fromJson(res.data);
     } on DioException catch (e) {
-      print("❌ Dio error: $e");
       throw Exception(e.response?.data["message"] ?? "Failed fetching products");
     } catch (e) {
-      print("❌ Unknown error: $e");
       throw Exception("Failed fetching products");
     }
   }
@@ -56,9 +53,6 @@ Future<Product> getProductById(int id) async {
         },
       );
 
-      print('UPDATE RESPONSE: ${response.data}'); // Debug
-
-      // return correct updated product structure
       if (response.data is Map<String, dynamic> &&
           response.data.containsKey('product')) {
         return Product.fromJson(response.data['product']);

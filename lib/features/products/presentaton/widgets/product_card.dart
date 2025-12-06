@@ -21,14 +21,7 @@ class ProductCard extends StatefulWidget {
 class _ProductCardState extends State<ProductCard> {
   int _qty = 0;
 
-  void _inc() {
-    setState(() => _qty++);
-  }
 
-  void _dec() {
-    if (_qty <= 0) return;
-    setState(() => _qty--);
-  }
 
   Future<void> _openDetail() async {
     final updatedQty = await Navigator.of(context).push<int>(
@@ -173,10 +166,13 @@ class _ProductCardState extends State<ProductCard> {
                             ),
                           ),
                           const Spacer(),
-                          // ADD / QTY
-                          _qty == 0
-                              ? GestureDetector(
-                            onTap: _inc,
+                          GestureDetector(
+                            onTap: (){
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => ProductDetailPage(repository: widget.repository, productId: widget.product.id)),
+                              );
+                            },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -187,7 +183,7 @@ class _ProductCardState extends State<ProductCard> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: const Text(
-                                'ADD',
+                                'View',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -195,42 +191,8 @@ class _ProductCardState extends State<ProductCard> {
                                 ),
                               ),
                             ),
-                          )
-                              : Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Row(
-                              children: [
-                                _QtyButton(
-                                  icon: Icons.remove,
-                                  enabled: _qty > 0,
-                                  onTap: _dec,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6),
-                                  child: Text(
-                                    '$_qty',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                _QtyButton(
-                                  icon: Icons.add,
-                                  enabled: true,
-                                  onTap: _inc,
-                                ),
-                              ],
-                            ),
                           ),
+
                         ],
                       ),
                     ],
@@ -249,11 +211,13 @@ class _QtyButton extends StatelessWidget {
   final IconData icon;
   final bool enabled;
   final VoidCallback onTap;
+  final BuildContext context;
 
   const _QtyButton({
     required this.icon,
     required this.enabled,
     required this.onTap,
+    required this.context
   });
 
   @override

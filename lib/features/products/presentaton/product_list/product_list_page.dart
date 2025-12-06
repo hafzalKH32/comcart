@@ -1,9 +1,9 @@
 import 'package:com_cart/features/products/data/product_repository.dart';
 import 'package:com_cart/features/products/logic/product_list/bloc/product_list_bloc.dart';
-import 'package:com_cart/features/products/presentaton/product_list/widgets/custom_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cart/add_cart_page.dart';
 import '../widgets/custom_grid_sliver.dart';
 
 class ProductListPage extends StatelessWidget {
@@ -18,24 +18,22 @@ class ProductListPage extends StatelessWidget {
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {
-              context
-                  .read<ProductListBloc>()
-                  .add(const ProductListRefreshed());
+              context.read<ProductListBloc>().add(const ProductListRefreshed());
             },
             child: BlocBuilder<ProductListBloc, ProductListState>(
               builder: (context, state) {
                 return CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    _buildHeader(),
+                    _buildHeader(context),
                     _buildSearchAndChipRow(context),
 
-                    // ───── MAIN CONTENT SLIVER (grid or states) ─────
                     if (state.status == ProductListStatus.loading ||
                         state.status == ProductListStatus.initial)
                       const SliverFillRemaining(
                         child: Center(child: CircularProgressIndicator()),
                       )
+
                     else if (state.status == ProductListStatus.failure)
                       SliverFillRemaining(
                         child: Center(
@@ -45,24 +43,30 @@ class ProductListPage extends StatelessWidget {
                           ),
                         ),
                       )
+
                     else if (state.products.isEmpty)
                         const SliverFillRemaining(
-                          child: Center(
-                            child: Text('No products available'),
-                          ),
+                          child: Center(child: Text('No products available')),
                         )
-                      else
-                        SliverPadding(
-                          padding:
-                          const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                          // 👇 THIS IS NOW A PROPER SLIVER GRID
-                          sliver: CustomGridSliver(
-                            products: state.products,
-                            repository: repository,
-                          ),
-                        ),
 
-                    // ───── PAGINATION BAR AS SEPARATE SLIVER ─────
+                      else if (state.searchQuery.isNotEmpty &&
+                            state.filteredProducts.isEmpty)
+                          const SliverFillRemaining(
+                            child: Center(child: Text("No products found")),
+                          )
+
+                        else
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            sliver: CustomGridSliver(
+                              products: state.searchQuery.isEmpty
+                                  ? state.products
+                                  : state.filteredProducts,
+                              repository: repository,
+                            ),
+                          ),
+
+                    // ───── PAGINATION ─────
                     if (state.products.isNotEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
@@ -81,60 +85,64 @@ class ProductListPage extends StatelessWidget {
     );
   }
 
-  SliverAppBar _buildHeader() {
+
+  SliverAppBar _buildHeader(BuildContext context) {
     return SliverAppBar(
       pinned: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
       expandedHeight: 140,
-      flexibleSpace: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF2CB67D), Color(0xFF0EA5E9)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(28),
-              ),
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF2CB67D), Color(0xFF0EA5E9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+        ),
+        child: const FlexibleSpaceBar(
+          titlePadding: EdgeInsets.only(left: 20, bottom: 12),
+          title: Text(
+            'Ecom Cart',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+              color: Colors.white,
             ),
-            child: const FlexibleSpaceBar(
-              titlePadding: EdgeInsets.only(left: 20, bottom: 12),
-              title: Text(
-                'Ecom Cart',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          );
-        },
+          ),
+        ),
       ),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16, top: 6),
-          child: Container(
-            height: 34,
-            width: 34,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.4)),
-            ),
-            child: const Icon(
-              Icons.shopping_bag_outlined,
-              color: Colors.white,
-              size: 18,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
+            },
+            child: Container(
+              height: 34,
+              width: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.4)),
+              ),
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ),
         ),
       ],
     );
   }
+
 
   SliverToBoxAdapter _buildSearchAndChipRow(BuildContext context) {
     return SliverToBoxAdapter(
@@ -151,6 +159,8 @@ class ProductListPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
+
+            // SEARCH FIELD
             Row(
               children: [
                 Expanded(
@@ -166,24 +176,24 @@ class ProductListPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
+                    child: TextField(
+                      onChanged: (value) {
+                        context.read<ProductListBloc>().add(
+                          ProductListSearched(value),
+                        );
+                      },
+                      decoration: const InputDecoration(
                         hintText: 'Search for items',
-                        hintStyle: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9CA3AF),
-                        ),
                         prefixIcon: Icon(Icons.search),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 15,
-                        ),
+                        contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 15),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
+
                 Container(
                   height: 44,
                   width: 44,
@@ -206,20 +216,8 @@ class ProductListPage extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 10),
-            SizedBox(
-              height: 32,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: const [
-                  _CategoryChip(label: 'All', selected: true),
-                  _CategoryChip(label: 'Tech'),
-                  _CategoryChip(label: 'Beauty'),
-                  _CategoryChip(label: 'Fashion'),
-                  _CategoryChip(label: 'Home'),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -227,50 +225,8 @@ class ProductListPage extends StatelessWidget {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  const _CategoryChip({required this.label, this.selected = false});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center, // 👈 ensure center alignment
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: selected ? const Color(0xFF2CB67D) : Colors.white,
-        boxShadow: selected
-            ? [
-          BoxShadow(
-            color: const Color(0xFF2CB67D).withOpacity(0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ]
-            : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Center(          // 👈 wrap for perfect centering
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : const Color(0xFF111827),
-          ),
-        ),
-      ),
-    );
-  }
-}
+
 
 class _PaginationBar extends StatelessWidget {
   final ProductListState state;
@@ -294,10 +250,14 @@ class _PaginationBar extends StatelessWidget {
             ),
           ],
         ),
+
+        // 🔥 FIXED OVERFLOW: scrolls horizontally and prevents overflow
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              // LEFT ARROW
               IconButton(
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -310,10 +270,14 @@ class _PaginationBar extends StatelessWidget {
                     : null,
                 icon: const Icon(Icons.chevron_left, size: 20),
               ),
+
               const SizedBox(width: 4),
+
+              // PAGE NUMBERS
               ...List.generate(totalPages, (index) {
                 final pageNumber = index + 1;
                 final isSelected = pageNumber == state.currentPage;
+
                 return GestureDetector(
                   onTap: () {
                     if (!isSelected) {
@@ -347,11 +311,14 @@ class _PaginationBar extends StatelessWidget {
                   ),
                 );
               }),
+
               const SizedBox(width: 4),
+
+              // RIGHT ARROW
               IconButton(
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
-                onPressed: state.currentPage < state.totalPages
+                onPressed: state.currentPage < totalPages
                     ? () {
                   context.read<ProductListBloc>().add(
                     ProductListFetched(state.currentPage + 1),

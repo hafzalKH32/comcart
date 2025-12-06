@@ -12,8 +12,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   List<CartItem> get _items => cartService.items;
 
-  double get _total =>
-      _items.fold(0.0, (sum, i) => sum + i.totalPrice);
+  double get _total => _items.fold(0.0, (sum, i) => sum + i.totalPrice);
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,13 @@ class _CartPageState extends State<CartPage> {
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(80),
-      child: AppBar(automaticallyImplyLeading: false,
+      child: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          'My Cart',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
@@ -38,34 +43,13 @@ class _CartPageState extends State<CartPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.vertical(
-              bottom: Radius.circular(24),
-            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
           ),
           child: SafeArea(
             bottom: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: const [
-                  _BackButton(),
-                  SizedBox(width: 8),
-                  Text(
-                    'My Cart',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Spacer(),
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ],
-              ),
+              child: Row(children: const [_BackButton()]),
             ),
           ),
         ),
@@ -145,7 +129,7 @@ class _CartPageState extends State<CartPage> {
                               item.product.thumbnail,
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.image_not_supported),
+                                  const Icon(Icons.image_not_supported),
                             ),
                           ),
                         ),
@@ -301,9 +285,7 @@ class _CartPageState extends State<CartPage> {
     // navigate to success screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => SuccessPage(amount: total),
-      ),
+      MaterialPageRoute(builder: (_) => SuccessPage(amount: total)),
     );
   }
 }
@@ -319,10 +301,7 @@ class _BackButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.18),
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.5),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
       ),
       child: IconButton(
         padding: EdgeInsets.zero,

@@ -16,3 +16,10 @@ class ProductListFetched extends ProductListEvent {
 final class ProductListRefreshed extends ProductListEvent {
   const ProductListRefreshed();
 }
+
+class ProductListSearched extends ProductListEvent {
+  final String query;
+  const ProductListSearched(this.query);
+
+
+}
